@@ -1,5 +1,5 @@
 # SYNOPSIS
-A very simple zero-downtime re-deploy solution.
+Safe code hotswap for zero downtime re-deploys.
 
 # MOTIVATION
 An application in production should not need to be stopped in order to
