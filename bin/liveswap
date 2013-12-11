@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+var net = require('net')
+var path = require('path')
+var through = require('through')
+var parse = require('through-parse')
+var split = require('split')
+
+var args = require('optimist')
+  .alias('p', 'port')
+  .default('p', 3000)
+  .describe('p', '<port> specify the source code to upgrade to.')
+
+  .alias('u', 'upgrade')
+  .describe('u', '<path> specify the source code to upgrade to.')
+  
+  .alias('k', 'kill')
+  .describe('k', 'kill all forked worker processes and respawn.')
+
+  .alias('d', 'die')
+  .describe('d', 'kill all forked worker processes and quit master process.')
+
+  .alias('m', 'message')
+  .describe('m', '<message> send a message to all the forked worker processes.')
+
+  .alias('s', 'start')
+  .describe('s', '<path> start a node process cluster.')
+
+var argv = args.argv
+
+if (argv.h || argv.help || process.argv.length == 2) {
+  console.log(args.help())
+  process.exit(0)
+}
+
+var oncode = function(method, stream, fn) {
+
+  stream
+    .pipe(split())
+    .pipe(parse())
+    .on('data', function(data) {
+
+      if (data.method == method) {
+        fn(data)
+      }
+    })
+}
+
+var write = function(stream, command, value) {
+  var message = { cmd: command, value: value || '' }
+  stream.write(JSON.stringify(message) + '\n')
+}
+
+var connect = function(fn) {
+  var port = argv.p || 3000
+  console.log('Attempting to connect to port %d', port)
+  return net.connect(port, fn)
+}
+
+var exec = function(command, value) {
+  var stream = connect(function() {
+    oncode(command, stream, function() {
+      console.error('OK', command)
+      process.exit(0)
+    })
+
+    write(stream, command, value)
+    setTimeout(function() {
+      console.log('The command could not complete')
+      process.exit(1)
+    }, 1e6)
+  })
+}
+
+if (argv.u) {
+  exec('upgrade', argv.u)
+}
+else if (argv.k) {
+  exec('kill', argv.k)
+}
+else if (argv.d) {
+  exec('die')
+}
+else if (argv.m) {
+  exec('message', argv.m)
+}
+else if (argv.s) {
+
+  var opts = { 
+    target: path.resolve(argv.s)
+  }
+
+  if (argv.p) {
+    opts.port = argv.p
+  }
+
+  require('../index')(opts)
+}

@@ -1,0 +1,22 @@
+{
+  "name": "liveswap",
+  "version": "0.1.1",
+  "description": "responsible code hotswap for zero downtime deploys",
+  "bin": "./bin/liveswap",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./test/test.js"
+  },
+  "author": "hij1nx",
+  "license": "MIT",
+  "dependencies": {
+    "through": "~2.3.4",
+    "split": "~0.2.10",
+    "optimist": "~0.6.0",
+    "through-parse": "~0.1.0"
+  },
+  "devDependencies": {
+    "better-assert": "~1.0.0",
+    "rimraf": "~2.2.5"
+  }
+}
