@@ -8,7 +8,7 @@ utilize new code.
 # DESCRIPTION
 Liveswap does two things. **1.** Fork worker processes with some arbitrary 
 code. **2.** Instruct a worker to restart using different code after existing 
-connections have been normally closed. Meanwhile at least one or more processes
+connections have been normally closed. Meanwhile at least one or more workers
 continue to run.
 
 # USAGE
