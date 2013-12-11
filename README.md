@@ -6,9 +6,10 @@ An application in production should not need to be stopped in order to
 utilize new code. 
 
 # DESCRIPTION
-Liveswap does two things. **1.** Fork worker processes of some arbitrary
-module. **2.** Instruct a worker to use different code when it is safe to 
-do so.
+Liveswap does two things. **1.** Fork worker processes with some arbitrary 
+code. **2.** Instruct a worker to restart using different code after existing 
+connections have been normally closed. Meanwhile at least one or more processes
+continue to run.
 
 # USAGE
 
