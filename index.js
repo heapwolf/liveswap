@@ -54,7 +54,7 @@ module.exports = function(opts) {
 
           if (method == 'message') {
             ee.emit('log', { value: 'sent to all', method: method })
-            return cluster.workers[id].send(message, value)
+            return cluster.workers[id].send(value)
           }
           else if (method == 'upgrade') {
             ee.emit('log', { value: 'sending disconnect all', method: method })

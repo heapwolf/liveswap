@@ -27,6 +27,7 @@ var app1handle
 var app2handle
 var lshandle1
 var lshandle2
+var lshandle3
 
 setTimeout(function() {
 
@@ -39,23 +40,40 @@ setTimeout(function() {
     l('checking response from the first version of the code')
     assert(d.toString() == '1')
     app1handle.end()
-    setTimeout(swap, 500)
-  }
 
-  function swap() {
-
-    l('sending an upgrade instruction to the process (1)')
-    var lshandle1 = spawn('node', ['./bin/liveswap', '-u', app2path])
+    l('sending a message to all the workers (1)')
+    var lshandle1 = spawn('node', ['./bin/liveswap', '-m', 'message to worker'])
+    var lshandle1out = ''
 
     lshandle1.stdout.on('data', function (data) {
       console.log('stdout (1): ' + data)
     })
 
     lshandle1.stderr.on('data', function (data) {
+      lshandle1out += data
       console.log('stderr (1): ' + data)
     })
 
-    lshandle1.on('close', check)
+    lshandle1.on('close', function() {
+      assert(lshandle1out.indexOf('OK') > -1)
+      setTimeout(swap, 500)
+    })
+  }
+
+  function swap() {
+
+    l('sending an upgrade instruction to the process (2)')
+    var lshandle2 = spawn('node', ['./bin/liveswap', '-u', app2path])
+
+    lshandle2.stdout.on('data', function (data) {
+      console.log('stdout (2): ' + data)
+    })
+
+    lshandle2.stderr.on('data', function (data) {
+      console.log('stderr (2): ' + data)
+    })
+
+    lshandle2.on('close', check)
     
     function check(code) {
       assert(code == 0)
@@ -75,18 +93,18 @@ setTimeout(function() {
 
   function cleanup() {
 
-    l('sending a takedown instruction to the process (2)')
-    lshandle2 = spawn('node', ['./bin/liveswap', '-d'])
+    l('sending a takedown instruction to the process (3)')
+    lshandle3 = spawn('node', ['./bin/liveswap', '-d'])
 
-    lshandle2.stdout.on('data', function (data) {
-      console.log('stdout (2): ' + data)
+    lshandle3.stdout.on('data', function (data) {
+      console.log('stdout (3): ' + data)
     })
 
-    lshandle2.stderr.on('data', function (data) {
-      console.log('stderr (2): ' + data)
+    lshandle3.stderr.on('data', function (data) {
+      console.log('stderr (3): ' + data)
     })
 
-    lshandle2.on('close', function(code) {
+    lshandle3.on('close', function(code) {
 
       assert(code == 0)
 
