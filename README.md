@@ -35,7 +35,7 @@ console.log('Server running at http://127.0.0.1:1337/')
 Start the application using liveswap from the command-line...
 
 ```bash
-liveswap index.js
+liveswap -s index1.js
 ```
 Alternatively, start liveswap programmatically...
 
