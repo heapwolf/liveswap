@@ -48,9 +48,10 @@ module.exports = function(opts) {
         writeHEAD(value)
       }
 
-      Object
-        .keys(cluster.workers)
-        .forEach(function(id) {
+      var queue = [];
+      var keys = Object.keys(cluster.workers);
+
+      keys.forEach(function(id, index) {
 
           if (method == 'message') {
             ee.emit('log', { value: 'sent to all', method: method })
@@ -58,9 +59,29 @@ module.exports = function(opts) {
           }
           else if (method == 'upgrade') {
             ee.emit('log', { value: 'sending disconnect all', method: method })
-            cluster.workers[id].disconnect(function() {
+
+            //
+            // stagger disconnects for better distribution
+            // of the worker disconnection state.
+            //
+            if (index % 2 === 0 && index !== keys.length-1) { 
+              return queue.push(id) 
+            }
+
+            cluster.workers[id].on('disconnect', function() {
               cluster.fork()
+              var nextId = queue.pop()
+
+              if (typeof nextId !== 'undefined') {
+                cluster.workers[nextId].on('disconnect', function() {
+                  cluster.fork()
+                })
+                setImmediate(function() {
+                  cluster.workers[nextId].disconnect()
+                })
+              }
             })
+            cluster.workers[id].disconnect()
           }
           else {
             cluster.workers[id].kill()
@@ -94,11 +115,11 @@ module.exports = function(opts) {
         .pipe(through(function(data) {
           if (data && data.cmd) {
             switch(data.cmd) {
-              
+
               case 'upgrade':
                 sig('upgrade', data.value) 
               break
-              
+
               case 'die':
                 sig('die', null, true)
               break
@@ -119,7 +140,13 @@ module.exports = function(opts) {
 
     server.listen(opts.port || 3000)
 
-    for (var i = 0; i < (opts.forks || numCPUs); i++) {
+    var forks = opts.forks || numCPUs
+    
+    if (forks < 2) {
+      forks = 2
+    }
+
+    for (var i = 0; i < forks; i++) {
       cluster.fork()
     }
 
@@ -130,22 +157,8 @@ module.exports = function(opts) {
     cluster.on('exit', function(worker, code, signal) {
       cluster.fork()
     })
-
-    //
-    // listen to various messages and events on the workers.
-    //
-    Object
-      .keys(cluster.workers)
-      .forEach(function(id) {
-        cluster.workers[id].on('message', function(msg) {
-          if (msg.cmd && msg.cmd) {
-            cluster.workers[id][msg.cmd]()
-          }
-        })
-      })
   }
   else {
-    var target = readHEAD()
-    var app = require(target)
+    require(readHEAD())
   }
 }

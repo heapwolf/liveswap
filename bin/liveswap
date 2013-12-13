@@ -10,6 +10,10 @@ var args = require('optimist')
   .default('p', 3000)
   .describe('p', '<port> specify the source code to upgrade to.')
 
+  .alias('f', 'forks')
+  .default('f', 2)
+  .describe('f', '<number> specify how many worker processes to spawn')
+
   .alias('u', 'upgrade')
   .describe('u', '<path> specify the source code to upgrade to.')
   
@@ -86,6 +90,7 @@ else if (argv.m) {
 else if (argv.s) {
 
   var opts = { 
+    forks: argv.f,
     target: path.resolve(argv.s)
   }
 

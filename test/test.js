@@ -11,7 +11,7 @@ var app1path = __dirname + '/fixtures/app1.js'
 var app2path = __dirname + '/fixtures/app2.js'
 
 l('Spawning the application as a child process (0)')
-var cp = spawn('node', ['./bin/liveswap', '-s', app1path])
+var cp = spawn('node', ['./bin/liveswap', '-s', app1path, '-f', '7'])
 
 cp.stdout.on('data', function (data) {
   console.log('stdout (0): ' + data)
@@ -87,7 +87,7 @@ setTimeout(function() {
             cleanup()
           })
         })
-      }, 500)
+      }, 1500)
     }
   }
 
