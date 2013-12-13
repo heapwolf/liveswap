@@ -1,6 +1,6 @@
 {
   "name": "liveswap",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "responsible code hotswap for zero downtime deploys",
   "bin": "./bin/liveswap",
   "main": "index.js",
