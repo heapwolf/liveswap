@@ -13,7 +13,9 @@ var headpath = path.join(__dirname + '/HEAD')
 var ee = new EventEmitter
 
 function readHEAD() {
-  return fs.readFileSync(headpath).toString()
+  var f = fs.readFileSync(headpath).toString()
+  console.log(f)
+    return f
 }
 
 function writeHEAD(value) {
@@ -27,12 +29,17 @@ module.exports = function(opts) {
   }
 
   if (!cluster.isMaster) {
-    return require(readHEAD())
+    try {
+      require(readHEAD())
+    }
+    catch(ex) {
+    }
+    return
   }
   writeHEAD(opts.target)
 
   function sig(method, value, norespawn) {
-
+    
     if (norespawn) {
       
       ee.emit('log', { 
@@ -49,49 +56,48 @@ module.exports = function(opts) {
       writeHEAD(value)
     }
 
-    var queue = [];
-    var keys = Object.keys(cluster.workers);
+    var queue = []
+    var keys = Object.keys(cluster.workers)
 
     keys.forEach(function(id, index) {
 
-        if (method == 'message') {
-          ee.emit('log', { value: 'sent to all', method: method })
-          return cluster.workers[id].send(value)
+      if (method == 'message') {
+        ee.emit('log', { value: 'sent to all', method: method })
+        return cluster.workers[id].send(value)
+      }
+      else if (method == 'upgrade') {
+        ee.emit('log', { value: 0, method: 'upgrade' })
+        //
+        // stagger disconnects for better distribution
+        // of the worker disconnection state.
+        //
+        if (index % 2 === 0 && index !== keys.length-1) { 
+          return queue.push(id) 
         }
-        else if (method == 'upgrade') {
-          ee.emit('log', { value: 'sending disconnect all', method: method })
 
-          //
-          // stagger disconnects for better distribution
-          // of the worker disconnection state.
-          //
-          if (index % 2 === 0 && index !== keys.length-1) { 
-            return queue.push(id) 
-          }
-
-          cluster.workers[id].on('disconnect', function() {
-            cluster.fork()
-            var nextId = queue.pop()
-
-            if (typeof nextId !== 'undefined') {
-              cluster.workers[nextId].on('disconnect', function() {
-                cluster.fork()
-              })
-              setImmediate(function() {
-                cluster.workers[nextId].disconnect()
-              })
-            }
-          })
-          cluster.workers[id].disconnect()
-        }
-        else {
-          cluster.workers[id].kill()
-          if (norespawn) {
-            return
-          }
+        cluster.workers[id].on('disconnect', function() {
           cluster.fork()
+          var nextId = queue.pop()
+
+          if (typeof nextId !== 'undefined') {
+            cluster.workers[nextId].on('disconnect', function() {
+              cluster.fork()
+            })
+            setImmediate(function() {
+              cluster.workers[nextId].disconnect()
+            })
+          }
+        })
+        cluster.workers[id].disconnect()
+      }
+      else {
+        cluster.workers[id].kill()
+        if (norespawn) {
+          return
         }
-      })
+        cluster.fork()
+      }
+    })
   }
 
   //
@@ -118,6 +124,13 @@ module.exports = function(opts) {
           switch(data.cmd) {
 
             case 'upgrade':
+              if (opts['pre-upgrade']) {
+                return require(opts['pre-upgrade'])(data, function(err) {
+                  if (!err) {
+                    sig('upgrade', data.value)
+                  }
+                })
+              }
               sig('upgrade', data.value) 
             break
 
