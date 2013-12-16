@@ -6,10 +6,18 @@ An application in production should not need to be stopped in order to
 utilize new code. 
 
 # DESCRIPTION
-Liveswap does two things. **1.** Fork worker processes with some arbitrary 
-code. **2.** Instruct a worker to restart using different code after existing 
-connections have been normally closed. Meanwhile at least one or more workers
-continue to run.
+liveswap is a library that helps you update an application’s code without stopping it. 
+It also ships with a command-line tool and it doesn’t impose any special requirements 
+or conventions on your application code.
+
+It works by creating a light-weight master process that runs your application code as 
+worker processes. It then starts listening for instructions.
+
+When you send an upgrade instruction, workers take turns disconnecting their underlying 
+servers. When a server is disconnected, it lets the old connections finish up, but no 
+new connections are accepted. When all of the worker’s connections have been closed, it 
+will be retired and a new one will be created using the new code. For more in depth 
+information read [`this`][0] blog post.
 
 # USAGE
 
@@ -93,10 +101,15 @@ string is specified, it will be interpreted as the `target` option.
 
 ### [option] `{ forks: <Number> }`
 
+### [option] `{ "pre-ugrade": <String> }`
+
 ```js
 liveswap({
   port: 9008,
   forks: 2,
-  target: './versions/v0.0.2'
+  target: './index.js'
+  "pre-upgrade": './pull.js'
 })
 ```
+
+[0]:https://medium.com/node-js-javascript/f00ce09abb77
