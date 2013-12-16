@@ -20,6 +20,8 @@ var args = require('optimist')
 
   .alias('u', 'upgrade')
   .describe('u', '<path> specify the source code to upgrade to.')
+
+  .describe('pre-upgrade', '<path> a module to handle pre upgrade logic.')
   
   .alias('k', 'kill')
   .describe('k', 'kill all forked worker processes and respawn.')
@@ -96,6 +98,7 @@ else if (argv.s) {
   var opts = { 
     forks: argv.f,
     address: argv.a,
+    'pre-upgrade': argv['pre-upgrade'],
     target: path.resolve(argv.s)
   }
 
