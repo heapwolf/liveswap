@@ -70,12 +70,15 @@ any current connections to end before restarting with the new code.
 
 ```bash
 Options:
-  -p, --port     <port> specify the source code to upgrade to.
+  -p, --port     <port> specify the source code to upgrade to.                 [default: 3000]
+  -a, --address  <address> specify the ip address to run on.                   [default: "127.0.0.1"]
+  -f, --forks    <number> specify how many worker processes to spawn           [default: 2]
   -u, --upgrade  <path> specify the source code to upgrade to.
+  --pre-upgrade  <path> a module to handle pre upgrade logic.
   -k, --kill     kill all forked worker processes and respawn.
   -d, --die      kill all forked worker processes and quit master process.
   -m, --message  <message> send a message to all the forked worker processes.
-  -s, --start    <path> start a liveswap enabled node process.
+  -s, --start    <path> start a node process cluster.
 ```
 
 # API
