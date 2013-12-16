@@ -13,9 +13,7 @@ var headpath = path.join(__dirname + '/HEAD')
 var ee = new EventEmitter
 
 function readHEAD() {
-  var f = fs.readFileSync(headpath).toString()
-  console.log(f)
-    return f
+  return fs.readFileSync(headpath).toString()
 }
 
 function writeHEAD(value) {
@@ -152,7 +150,7 @@ module.exports = function(opts) {
       }))
   })
 
-  server.listen(opts.port || 3000)
+  server.listen(opts.port || 3000, opts.address)
 
   var forks = opts.forks || numCPUs
   
