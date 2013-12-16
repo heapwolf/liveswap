@@ -43,19 +43,19 @@ setTimeout(function() {
 
     l('sending a message to all the workers (1)')
     var lshandle1 = spawn('node', ['./bin/liveswap', '-m', 'message to worker'])
-    var lshandle1out = ''
+    var err
 
     lshandle1.stdout.on('data', function (data) {
       console.log('stdout (1): ' + data)
     })
 
     lshandle1.stderr.on('data', function (data) {
-      lshandle1out += data
+      err = data
       console.log('stderr (1): ' + data)
     })
 
     lshandle1.on('close', function() {
-      assert(lshandle1out.indexOf('OK') > -1)
+      assert(!err)
       setTimeout(swap, 500)
     })
   }
@@ -116,4 +116,4 @@ setTimeout(function() {
     })
   }
 
-}, 500)
+}, 1500)

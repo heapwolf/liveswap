@@ -31,6 +31,7 @@ module.exports = function(opts) {
       require(readHEAD())
     }
     catch(ex) {
+      console.error(ex)
     }
     return
   }
@@ -39,9 +40,9 @@ module.exports = function(opts) {
   function sig(method, value, norespawn) {
     
     if (norespawn) {
-      
-      ee.emit('log', { 
-        value: 'about to die',
+
+      ee.emit('log', {
+        value: 'preparing to die',
         method: 'die'
       })
 
@@ -50,52 +51,57 @@ module.exports = function(opts) {
       }, 1e3)
     }
 
-    if (method == 'upgrade') {
-      writeHEAD(value)
-    }
-
-    var queue = []
     var keys = Object.keys(cluster.workers)
 
-    keys.forEach(function(id, index) {
+    function broadcast(keys) {
+      keys.forEach(function(id, index) {
 
-      if (method == 'message') {
-        ee.emit('log', { value: 'sent to all', method: method })
-        return cluster.workers[id].send(value)
-      }
-      else if (method == 'upgrade') {
-        ee.emit('log', { value: 0, method: 'upgrade' })
-        //
-        // stagger disconnects for better distribution
-        // of the worker disconnection state.
-        //
-        if (index % 2 === 0 && index !== keys.length-1) { 
-          return queue.push(id) 
+        if (method === 'message') {
+
+          cluster.workers[id].send(value)
+          if (index === keys.length-1) {
+            ee.emit('log', { value: 'sending to all', method: method })
+          }
         }
+        else if (method === 'upgrade') {
 
-        cluster.workers[id].on('disconnect', function() {
-          cluster.fork()
-          var nextId = queue.pop()
-
-          if (typeof nextId !== 'undefined') {
-            cluster.workers[nextId].on('disconnect', function() {
+          if (index % 2 === 0 && index !== keys.length-1) { 
+            cluster.fork()
+          }
+          else {
+            cluster.workers[id].disconnect()
+            cluster.workers[id].on('disconnect', function() {
               cluster.fork()
             })
-            setImmediate(function() {
-              cluster.workers[nextId].disconnect()
-            })
           }
-        })
-        cluster.workers[id].disconnect()
-      }
-      else {
-        cluster.workers[id].kill()
-        if (norespawn) {
-          return
+          
+          if (index === keys.length-1) {
+            ee.emit('log', { value: 'OK', method: method })
+          }
         }
-        cluster.fork()
-      }
-    })
+        else {
+
+          cluster.workers[id].kill()
+          if (norespawn) {
+            return
+          }
+          cluster.fork()
+        }
+      })
+    }
+
+    if (method === 'upgrade') {
+      var mpath = path.resolve(value)
+      return fs.stat(mpath, function(err, stat) {
+        if (!err) {
+          writeHEAD(mpath)
+          return broadcast(keys)
+        }
+        ee.emit('log', { value: err, method: method })
+      })
+    }
+
+    broadcast(keys)
   }
 
   //
@@ -112,6 +118,10 @@ module.exports = function(opts) {
 
     conn.on('close', function() {
       ee.removeListener('log', log)
+    })
+
+    conn.on('error', function(err) {
+      ee.emit('log', { value: err, method: method })
     })
 
     conn
