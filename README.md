@@ -89,6 +89,13 @@ Options:
   -s, --start    <path> start a node process cluster.
 ```
 
+Pre-upgrade allows you to require a module that will be executed before each 
+time the upgrade happens.
+
+```bash
+liveswap --pre-upgrade ./pull.js --start ./index1.js
+```
+
 # API
 
 ## liveswap(opts)
