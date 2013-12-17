@@ -16,7 +16,7 @@
     "through-parse": "~0.1.0"
   },
   "devDependencies": {
-    "better-assert": "~1.0.0",
-    "rimraf": "~2.2.5"
+    "rimraf": "~2.2.5",
+    "tap": "~0.4.6"
   }
 }

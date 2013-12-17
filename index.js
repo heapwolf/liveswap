@@ -35,6 +35,7 @@ module.exports = function(opts) {
     }
     return
   }
+
   writeHEAD(opts.target)
 
   function sig(method, value, norespawn) {
@@ -60,7 +61,7 @@ module.exports = function(opts) {
 
           cluster.workers[id].send(value)
           if (index === keys.length-1) {
-            ee.emit('log', { value: 'sending to all', method: method })
+            ee.emit('log', { value: 'OK', method: method })
           }
         }
         else if (method === 'upgrade') {
@@ -74,7 +75,7 @@ module.exports = function(opts) {
               cluster.fork()
             })
           }
-          
+
           if (index === keys.length-1) {
             ee.emit('log', { value: 'OK', method: method })
           }
@@ -160,7 +161,9 @@ module.exports = function(opts) {
       }))
   })
 
-  server.listen(opts.port || 3000, opts.address)
+  server.listen(opts.port || 3000, opts.address, function() {
+    console.log('Starting on port %d', opts.port)
+  })
 
   var forks = opts.forks || numCPUs
   
