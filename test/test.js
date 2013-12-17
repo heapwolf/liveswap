@@ -47,7 +47,6 @@ test('an app can be started with liveswap', function (t) {
       })
     })
   }, 1500)
-
 })
 
 test('an app can be sent a message with liveswap', function (t) {
@@ -101,7 +100,46 @@ test('an app can be sent a message with liveswap', function (t) {
     })
 
   }, 1500)
+})
 
+
+test('an app can be killed. all workers are killed and respawned', function (t) {
+  
+  var err = null
+  const FORKS = 7
+
+  l('Spawning the application as a child process (0)')
+  var cp_liveswap = spawn('node', ['./bin/liveswap', '-s', APP1_PATH, '-f', FORKS])
+  
+  cp_liveswap.stderr.on('data', function (data) {
+    console.log('stderr (0): ' + data)
+  })
+
+  cp_liveswap.stdout.on('data', function (data) {
+    console.log('stdout (0): ' + data)
+  })
+
+  setTimeout(function() {
+
+    l('sending a message to all the workers (1)')
+    var lshandle1 = spawn('node', ['./bin/liveswap', '-k'])
+
+    lshandle1.stderr.on('data', function (data) {
+      err = data
+      console.log('stderr (1): ' + data)
+    })
+
+    lshandle1.stdout.on('data', function (data) {
+      console.log('stdout (1): ' + data)
+    })
+
+    lshandle1.on('close', function() {
+      t.ok(!err, 'no standard error output')
+      cp_liveswap.kill()
+      t.end()
+    })
+
+  }, 1500)
 })
 
 

@@ -41,12 +41,6 @@ module.exports = function(opts) {
   function sig(method, value, norespawn) {
     
     if (norespawn) {
-
-      ee.emit('log', {
-        value: 'preparing to die',
-        method: 'die'
-      })
-
       setTimeout(function() {
         process.kill()
       }, 1e3)
@@ -58,16 +52,15 @@ module.exports = function(opts) {
       keys.forEach(function(id, index) {
 
         if (method === 'message') {
-
           cluster.workers[id].send(value)
-          if (index === keys.length-1) {
-            ee.emit('log', { value: 'OK', method: method })
-          }
         }
         else if (method === 'upgrade') {
 
           if (index % 2 === 0 && index !== keys.length-1) { 
             cluster.fork()
+            setImmediate(function() {
+              cluster.workers[id].disconnect()
+            })
           }
           else {
             cluster.workers[id].disconnect()
@@ -75,18 +68,22 @@ module.exports = function(opts) {
               cluster.fork()
             })
           }
-
-          if (index === keys.length-1) {
-            ee.emit('log', { value: 'OK', method: method })
-          }
         }
         else {
 
           cluster.workers[id].kill()
+
           if (norespawn) {
+            if (index === keys.length-1) {
+              ee.emit('log', { value: 'OK', method: 'die' })
+            }
             return
           }
           cluster.fork()
+        }
+
+        if (index === keys.length-1) {
+          ee.emit('log', { value: 'OK', method: method })
         }
       })
     }
@@ -166,10 +163,6 @@ module.exports = function(opts) {
   })
 
   var forks = opts.forks || numCPUs
-  
-  if (forks < 2) {
-    forks = 2
-  }
 
   for (var i = 0; i < forks; i++) {
     cluster.fork()
