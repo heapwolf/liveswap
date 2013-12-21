@@ -1,3 +1,5 @@
+![build-status](https://www.codeship.io/projects/27833a30-4c7c-0131-1043-328a0651e296/status)
+
 # SYNOPSIS
 Safe code hotswap for zero downtime re-deploys.
 
