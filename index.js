@@ -131,9 +131,9 @@ module.exports = function(opts) {
 
             case 'upgrade':
               if (opts['pre-upgrade']) {
-                return require(opts['pre-upgrade'])(data, function(err) {
+                return require(opts['pre-upgrade'])(data, function(err, value) {
                   if (!err) {
-                    sig('upgrade', data.value)
+                    sig('upgrade', value || data.value)
                   }
                 })
               }

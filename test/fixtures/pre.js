@@ -9,7 +9,8 @@ module.exports = function(target, done) {
     cwd: __dirname
   }
   exec(cmd, opts, function(err, stdout, stderr) {
-    ASSERT(fs.statSync(__dirname + '/app3.js'))
-    done(err || null)
+    var p = __dirname + '/app3.js'
+    ASSERT(fs.statSync(p))
+    done(err || null, p)
   })
 }
