@@ -101,7 +101,7 @@ else if (argv.s) {
 
   var preupgrade = argv['pre-upgrade']
   if (preupgrade) {
-    preupgrade = preupgrade.replace(/^\.[\\\/]/, process.cwd() + path.sep);
+    preupgrade = preupgrade.replace(/^\.[\\\/]/, process.cwd() + path.sep)
   }
 
   var opts = { 
