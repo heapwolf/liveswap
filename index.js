@@ -25,6 +25,9 @@ module.exports = function(opts) {
   if (typeof opts == 'string') {
     opts = { target: opts }
   }
+  if (opts.head) {
+    headpath = opts.head
+  }
 
   if (!cluster.isMaster) {
     try {
