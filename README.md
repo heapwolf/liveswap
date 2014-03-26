@@ -5,20 +5,20 @@ Safe code hotswap for zero downtime re-deploys.
 
 # MOTIVATION
 An application in production should not need to be stopped in order to
-utilize new code. 
+utilize new code.
 
 # DESCRIPTION
-liveswap is a library that helps you update an application’s code without stopping it. 
-It also ships with a command-line tool and it doesn’t impose any special requirements 
+liveswap is a library that helps you update an application’s code without stopping it.
+It also ships with a command-line tool and it doesn’t impose any special requirements
 or conventions on your application code.
 
-It works by creating a light-weight master process that runs your application code as 
+It works by creating a light-weight master process that runs your application code as
 worker processes. It then starts listening for instructions.
 
-When you send an upgrade instruction, workers take turns disconnecting their underlying 
-servers. When a server is disconnected, it lets the old connections finish up, but no 
-new connections are accepted. When all of the worker’s connections have been closed, it 
-will be retired and a new one will be created using the new code. For more in depth 
+When you send an upgrade instruction, workers take turns disconnecting their underlying
+servers. When a server is disconnected, it lets the old connections finish up, but no
+new connections are accepted. When all of the worker’s connections have been closed, it
+will be retired and a new one will be created using the new code. For more in depth
 information read [`this`][0] blog post.
 
 # USAGE
@@ -91,17 +91,36 @@ Options:
   -s, --start    <path> start a node process cluster.
 ```
 
-Pre-upgrade allows you to require a module that will be executed before each 
+Pre-upgrade allows you to require a module that will be executed before each
 time the upgrade happens.
 
 ```bash
 liveswap --pre-upgrade ./pull.js --start ./index1.js
 ```
 
+The pre-upgrade module should export a single function as its interface.
+Here's an example of what that module might look like:
+
+```js
+function preupgrade(data, callback) {
+  console.log('executing pre-upgrade script...');
+
+  var err, value = data.value;
+  try {
+    // execute pre-upgrade code
+  } catch (e) {
+    err = e.toString();
+  }
+
+  return callback(err, value);
+}
+module.exports = preupgrade;
+```
+
 # API
 
 ## liveswap(opts)
-The main export of this library accepts an options object or a string. If a 
+The main export of this library accepts an options object or a string. If a
 string is specified, it will be interpreted as the `target` option.
 
 ### [option] `{ target: <String> }`

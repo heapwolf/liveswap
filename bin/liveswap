@@ -102,10 +102,15 @@ else if (argv.m) {
 }
 else if (argv.s) {
 
+  var preupgrade = argv['pre-upgrade']
+  if (preupgrade) {
+    preupgrade = preupgrade.replace(/^\.[\\\/]/, process.cwd() + path.sep)
+  }
+
   var opts = { 
     forks: argv.f,
     address: argv.a,
-    'pre-upgrade': argv['pre-upgrade'],
+    'pre-upgrade': preupgrade,
     target: path.resolve(argv.s),
     head: argv.head
   }
