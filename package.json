@@ -8,6 +8,10 @@
     "test": "node ./test/test.js"
   },
   "author": "hij1nx",
+  "repository" : { 
+    "type" : "git", 
+    "url" : "http://github.com/hij1nx/liveswap.git"
+  },
   "license": "MIT",
   "dependencies": {
     "through": "~2.3.4",
