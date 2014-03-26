@@ -35,6 +35,9 @@ var args = require('optimist')
   .alias('s', 'start')
   .describe('s', '<path> start a node process cluster.')
 
+  .alias('H', 'head')
+  .describe('H', '<path> path to HEAD file')
+
 var argv = args.argv
 
 if (argv.h || argv.help || process.argv.length == 2) {
@@ -108,7 +111,8 @@ else if (argv.s) {
     forks: argv.f,
     address: argv.a,
     'pre-upgrade': preupgrade,
-    target: path.resolve(argv.s)
+    target: path.resolve(argv.s),
+    head: argv.head
   }
 
   if (argv.p) {
