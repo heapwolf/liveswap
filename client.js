@@ -25,6 +25,10 @@ var exec = exports.exec = function(args) {
   var host = options.host || '127.0.0.1'
   var cb = args[1]
 
+  if (!cb) {
+    throw new Error('callback required');
+  }
+
   var stream = net.connect(port, host, function() {
     var message = { cmd: cmd, value: value }
     stream.write(JSON.stringify(message) + '\n')
@@ -32,23 +36,21 @@ var exec = exports.exec = function(args) {
 
   var fin
 
-  if (cb) {
-    stream
-      .pipe(split())
-      .pipe(parse())
-      .on('error', function(err) {
-        if (!fin) {
-          fin = true
-          cb(err)
-        }
-      })
-      .on('data', function(data) {
-        console.log(data)
-        if (!fin && data.cmd == cmd) {
-          cb(data)
-        }
-      })
-  }
+  stream.on('error', function(err) {
+    if (!fin) {
+      fin = true
+      cb(err)
+    }
+  })
+
+  stream
+    .pipe(split())
+    .pipe(parse())
+    .on('data', function(data) {
+      if (!fin && data.cmd == cmd) {
+        cb(data)
+      }
+    })
 }
 
 exports.upgrade = function upgrade() { exec(arguments) }
