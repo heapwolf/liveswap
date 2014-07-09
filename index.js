@@ -41,7 +41,7 @@ module.exports = function(opts) {
 
   writeHEAD(opts.target)
 
-  function sig(method, value, norespawn) {
+  function sig(cmd, value, norespawn) {
     
     if (norespawn) {
       setTimeout(function() {
@@ -54,10 +54,10 @@ module.exports = function(opts) {
     function broadcast(keys) {
       keys.forEach(function(id, index) {
 
-        if (method === 'message') {
+        if (cmd === 'message') {
           cluster.workers[id].send(value)
         }
-        else if (method === 'upgrade') {
+        else if (cmd === 'upgrade') {
 
           if (index % 2 === 0 && index !== keys.length-1) { 
             cluster.fork()
@@ -78,7 +78,7 @@ module.exports = function(opts) {
 
           if (norespawn) {
             if (index === keys.length-1) {
-              ee.emit('log', { value: 'OK', method: 'die' })
+              ee.emit('log', { value: 'OK', cmd: 'die' })
             }
             return
           }
@@ -86,19 +86,19 @@ module.exports = function(opts) {
         }
 
         if (index === keys.length-1) {
-          ee.emit('log', { value: 'OK', method: method })
+          ee.emit('log', { value: 'OK', cmd: cmd })
         }
       })
     }
 
-    if (method === 'upgrade') {
+    if (cmd === 'upgrade') {
       var mpath = path.resolve(value)
       return fs.stat(mpath, function(err, stat) {
         if (!err) {
           writeHEAD(mpath)
           return broadcast(keys)
         }
-        ee.emit('log', { value: err, method: method })
+        ee.emit('log', { value: err, cmd: cmd })
       })
     }
 
@@ -122,7 +122,7 @@ module.exports = function(opts) {
     })
 
     conn.on('error', function(err) {
-      ee.emit('log', { value: err, method: method })
+      ee.emit('log', { value: err, cmd: cmd })
     })
 
     conn

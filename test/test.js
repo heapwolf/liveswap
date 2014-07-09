@@ -5,7 +5,7 @@ var spawn = require('child_process').spawn
 var fs = require('fs')
 var path = require('path')
 var rimraf = require('rimraf')
-var split = require('split') 
+var split = require('split')
 var parse = require('through-parse')
 
 var l = console.log
@@ -35,7 +35,7 @@ test('an app can be started with liveswap', function (t) {
 
     conn = net.connect({ port: APP_PORT }, function() {
       conn.on('data', function(d) {
-        
+
         t.ok(d.toString() == '1')
 
         rimraf(HEAD_PATH, function(err) {
@@ -50,7 +50,7 @@ test('an app can be started with liveswap', function (t) {
 })
 
 test('an app can be sent a message with liveswap', function (t) {
-  
+
   var err = null
   var count = 0
   var message_re = /message to worker/g
@@ -60,7 +60,7 @@ test('an app can be sent a message with liveswap', function (t) {
 
   l('Spawning the application as a child process (0)')
   var cp_liveswap = spawn('node', ['./bin/liveswap', '-s', APP1_PATH, '-f', FORKS])
-  
+
   cp_liveswap.stderr.on('data', function (data) {
     console.log('stderr (0): ' + data)
   })
@@ -104,13 +104,13 @@ test('an app can be sent a message with liveswap', function (t) {
 
 
 test('an app can be killed. all workers are killed and respawned', function (t) {
-  
+
   var err = null
   const FORKS = 7
 
   l('Spawning the application as a child process (0)')
   var cp_liveswap = spawn('node', ['./bin/liveswap', '-s', APP1_PATH, '-f', FORKS])
-  
+
   cp_liveswap.stderr.on('data', function (data) {
     console.log('stderr (0): ' + data)
   })
@@ -144,7 +144,7 @@ test('an app can be killed. all workers are killed and respawned', function (t) 
 
 
 test('an app can have its code swapped without restarting', function (t) {
-  
+
   var err = null
   var count = 0
   const FORKS = 7
@@ -152,7 +152,7 @@ test('an app can have its code swapped without restarting', function (t) {
 
   l('Spawning the application as a child process (0)')
   var cp_liveswap = spawn('node', ['./bin/liveswap', '-s', APP1_PATH, '-f', FORKS])
-  
+
   cp_liveswap.stderr.on('data', function (data) {
     console.log('stderr (0): ' + data)
   })
@@ -168,7 +168,7 @@ test('an app can have its code swapped without restarting', function (t) {
 
     conn1 = net.connect({ port: APP_PORT }, function() {
       conn1.on('data', function(d) {
-        
+
         t.ok(d.toString() == '1')
         conn1.end()
         setTimeout(swap, 1500)
@@ -188,7 +188,7 @@ test('an app can have its code swapped without restarting', function (t) {
         console.log('stdout (1): ' + data)
 
         if (data.toString().indexOf('OK') > -1) {
-          
+
           setTimeout(function() {
             var conn2
             l('opening a connection to the application')
@@ -216,7 +216,7 @@ test('an app can have its code swapped without restarting', function (t) {
 })
 
 test('pre-upgrade logic is executed', function (t) {
-  
+
   var err = null
   var count = 0
   const FORKS = 7
@@ -225,7 +225,7 @@ test('pre-upgrade logic is executed', function (t) {
 
   l('Spawning the application as a child process (0)')
   var cp_liveswap = spawn('node', ['./bin/liveswap', '--pre-upgrade', PRE, '-s', APP1_PATH, '-f', FORKS])
-  
+
   cp_liveswap.stderr.on('data', function (data) {
     console.log('stderr (0): ' + data)
   })
@@ -241,7 +241,7 @@ test('pre-upgrade logic is executed', function (t) {
 
     conn1 = net.connect({ port: APP_PORT }, function() {
       conn1.on('data', function(d) {
-        
+
         t.ok(d.toString() == '1')
         conn1.end()
         setTimeout(swap, 1500)
@@ -291,3 +291,4 @@ test('pre-upgrade logic is executed', function (t) {
 
   }, 1500)
 })
+

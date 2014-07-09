@@ -1,9 +1,6 @@
 #!/usr/bin/env node
-var net = require('net')
 var path = require('path')
-var through = require('through')
-var parse = require('through-parse')
-var split = require('split')
+var client = require('../client')
 
 var args = require('optimist')
   .alias('p', 'port')
@@ -45,60 +42,26 @@ if (argv.h || argv.help || process.argv.length == 2) {
   process.exit(0)
 }
 
-var oncode = function(method, stream, fn) {
-
-  stream
-    .pipe(split())
-    .pipe(parse())
-    .on('data', function(data) {
-
-      if (data.method == method) {
-        fn(data)
-      }
-    })
-}
-
-var write = function(stream, command, value) {
-  var message = { cmd: command, value: value || '' }
-  stream.write(JSON.stringify(message) + '\n')
-}
-
-var connect = function(fn) {
-  var port = argv.p || 3000
-  console.log('Attempting to connect to port %d', port)
-  return net.connect(port, fn)
-}
-
-var exec = function(command, value) {
-  var stream = connect(function() {
-    oncode(command, stream, function(data) {
-      if (data.code) {
-        console.error(data)
-        process.exit(1)
-      }
-      console.log(data)
-      process.exit(0)
-    })
-
-    write(stream, command, value)
-    setTimeout(function() {
-      console.log('The command could not complete')
-      process.exit(1)
-    }, 1e9)
-  })
+var done = function(value) {
+  if (value.code) {
+    console.error(value)
+    process.exit(1)
+  }
+  console.log(value)
+  process.exit(0)
 }
 
 if (argv.u) {
-  exec('upgrade', argv.u)
+  client.upgrade(argv.u, done)
 }
 else if (argv.k) {
-  exec('kill', argv.k)
+  client.kill(argv.k, done)
 }
 else if (argv.d) {
-  exec('die')
+  client.die(null, done);
 }
 else if (argv.m) {
-  exec('message', argv.m)
+  client.message(argv.m, done)
 }
 else if (argv.s) {
 
