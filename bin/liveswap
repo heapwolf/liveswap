@@ -5,7 +5,7 @@ var client = require('../client')
 var args = require('optimist')
   .alias('p', 'port')
   .default('p', 3000)
-  .describe('p', '<port> specify the source code to upgrade to.')
+  .describe('p', '<port> specify the liveswap server port.')
 
   .alias('a', 'address')
   .default('a', '127.0.0.1')
@@ -75,11 +75,8 @@ else if (argv.s) {
     address: argv.a,
     'pre-upgrade': preupgrade,
     target: path.resolve(argv.s),
-    head: argv.head
-  }
-
-  if (argv.p) {
-    opts.port = argv.p
+    head: argv.head,
+    port: argv.p
   }
 
   require('../index')(opts)
