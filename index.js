@@ -111,6 +111,8 @@ module.exports = function(opts) {
   //
   var server = net.createServer(function(conn) {
 
+    var cmd
+
     function log(d) {
       conn.write(JSON.stringify(d) + '\n')
     }
@@ -129,34 +131,35 @@ module.exports = function(opts) {
       .pipe(split())
       .pipe(parse())
       .pipe(through(function(data) {
-        if (data && data.cmd) {
-          switch(data.cmd) {
+        if (!data || !data.cmd) return
 
-            case 'upgrade':
-              if (opts['pre-upgrade']) {
-                return require(opts['pre-upgrade'])(data, function(err, value) {
-                  if (!err) {
-                    sig('upgrade', value || data.value)
-                  }
-                })
-              }
-              sig('upgrade', data.value) 
-            break
+        cmd = data.cmd
 
-            case 'die':
-              sig('die', null, true)
-            break
+        switch(cmd) {
+          case 'upgrade':
+            if (opts['pre-upgrade']) {
+              return require(opts['pre-upgrade'])(data, function(err, value) {
+                if (!err) {
+                  sig('upgrade', value || data.value)
+                }
+              })
+            }
+            sig('upgrade', data.value)
+          break
 
-            case 'kill': 
-              sig('kill')
-            break
+          case 'die':
+            sig('die', null, true)
+          break
 
-            case 'message':
-              if (data.value) {
-                sig('message', data.value)
-              }
-            break
-          }
+          case 'kill':
+            sig('kill')
+          break
+
+          case 'message':
+            if (data.value) {
+              sig('message', data.value)
+            }
+          break
         }
       }))
   })
