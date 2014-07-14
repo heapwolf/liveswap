@@ -63,6 +63,9 @@ else if (argv.d) {
 else if (argv.m) {
   client.message(argv.m, done)
 }
+else if (argv['preupgrade']) {
+  client.preupgrade(null, done)
+}
 else if (argv.s) {
 
   var preupgrade = argv['pre-upgrade']
