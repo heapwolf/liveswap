@@ -57,4 +57,4 @@ exports.upgrade = function upgrade() { exec(arguments) }
 exports.kill = function kill() { exec(arguments) }
 exports.die = function die() { exec(arguments) }
 exports.message = function message() { exec(arguments) }
-
+exports.preupgrade = function preupgrade() { exec(arguments) }

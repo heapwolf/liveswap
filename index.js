@@ -147,6 +147,17 @@ module.exports = function(opts) {
             sig('upgrade', data.value)
           break
 
+          case 'preupgrade':
+            if (opts['pre-upgrade']) {
+              return require(opts['pre-upgrade'])(data, function(err, value) {
+                if (err) {
+                  return ee.emit('log', { value: err, cmd: cmd })
+                }
+                ee.emit('log', { value: 'OK', cmd: cmd })
+              })
+            }
+          break
+
           case 'die':
             sig('die', null, true)
           break
