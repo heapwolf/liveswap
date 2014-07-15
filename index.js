@@ -25,6 +25,9 @@ module.exports = function(opts) {
   if (typeof opts == 'string') {
     opts = { target: opts }
   }
+  if (typeof opts['zero-downtime'] === 'undefined') {
+    opts['zero-downtime'] = true
+  }
   if (opts.head) {
     headpath = opts.head
   }
@@ -57,7 +60,7 @@ module.exports = function(opts) {
         if (cmd === 'message') {
           cluster.workers[id].send(value)
         }
-        else if (cmd === 'upgrade') {
+        else if (cmd === 'upgrade' && opts['zero-downtime']) {
 
           if (index % 2 === 0 && index !== keys.length-1) { 
             cluster.fork()
@@ -140,7 +143,7 @@ module.exports = function(opts) {
             if (opts['pre-upgrade']) {
               return require(opts['pre-upgrade'])(data, function(err, value) {
                 if (!err) {
-                  sig('upgrade', value || data.value)
+                  sig('upgrade', value || data.value || opts.target)
                 }
               })
             }

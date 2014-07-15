@@ -16,7 +16,7 @@ var args = require('optimist')
   .describe('f', '<number> specify how many worker processes to spawn')
 
   .alias('u', 'upgrade')
-  .describe('u', '<path> specify the source code to upgrade to.')
+  .describe('u', '[<path>] specify the source code to upgrade to.')
 
   .describe('pre-upgrade', '<path> a module to handle pre upgrade logic.')
   
@@ -34,6 +34,8 @@ var args = require('optimist')
 
   .alias('H', 'head')
   .describe('H', '<path> path to HEAD file')
+
+  .describe('z', 'disable zero-downtime, upgrade will kill processes')
 
 var argv = args.argv
 
@@ -76,7 +78,8 @@ else if (argv.s) {
     'pre-upgrade': preupgrade,
     target: path.resolve(argv.s),
     head: argv.head,
-    port: argv.p
+    port: argv.p,
+    'zero-downtime': argv.z ? false : true
   }
 
   require('../index')(opts)
