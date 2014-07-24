@@ -9,6 +9,8 @@ var net = require('net')
 //
 var exec = exports.exec = function(args) {
 
+  var options;
+
   if (typeof args[0] == 'function') {
     options = {}
   }
@@ -48,7 +50,7 @@ var exec = exports.exec = function(args) {
     .pipe(parse())
     .on('data', function(data) {
       if (!fin && data.cmd == cmd) {
-        cb(data)
+        cb(null, data)
       }
     })
 }
