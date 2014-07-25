@@ -50,7 +50,7 @@ var exec = exports.exec = function(args) {
     .pipe(parse())
     .on('data', function(data) {
       if (!fin && data.cmd == cmd) {
-        cb(data)
+        cb(null, data)
       }
     })
 }
