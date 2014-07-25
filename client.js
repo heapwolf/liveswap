@@ -53,10 +53,12 @@ var exec = exports.exec = function(args) {
         cb(null, data)
       }
     })
+
+  return stream
 }
 
-exports.upgrade = function upgrade() { exec(arguments) }
-exports.kill = function kill() { exec(arguments) }
-exports.die = function die() { exec(arguments) }
-exports.message = function message() { exec(arguments) }
+exports.upgrade = function upgrade() { return exec(arguments) }
+exports.kill = function kill() { return exec(arguments) }
+exports.die = function die() { return exec(arguments) }
+exports.message = function message() { return exec(arguments) }
 
