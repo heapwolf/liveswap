@@ -9,6 +9,8 @@ var net = require('net')
 //
 var exec = exports.exec = function(args) {
 
+  var options;
+
   if (typeof args[0] == 'function') {
     options = {}
   }
