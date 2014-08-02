@@ -9,6 +9,8 @@ var net = require('net')
 //
 var exec = exports.exec = function(args) {
 
+  var options;
+
   if (typeof args[0] == 'function') {
     options = {}
   }
@@ -48,13 +50,15 @@ var exec = exports.exec = function(args) {
     .pipe(parse())
     .on('data', function(data) {
       if (!fin && data.cmd == cmd) {
-        cb(data)
+        cb(null, data)
       }
     })
+
+  return stream
 }
 
-exports.upgrade = function upgrade() { exec(arguments) }
-exports.kill = function kill() { exec(arguments) }
-exports.die = function die() { exec(arguments) }
-exports.message = function message() { exec(arguments) }
+exports.upgrade = function upgrade() { return exec(arguments) }
+exports.kill = function kill() { return exec(arguments) }
+exports.die = function die() { return exec(arguments) }
+exports.message = function message() { return exec(arguments) }
 

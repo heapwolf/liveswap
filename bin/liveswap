@@ -44,12 +44,12 @@ if (argv.h || argv.help || process.argv.length == 2) {
   process.exit(0)
 }
 
-var done = function(value) {
-  if (value.code) {
-    console.error(value)
+var done = function(err, data) {
+  if (err) {
+    console.error(err)
     process.exit(1)
   }
-  console.log(value)
+  console.log(data)
   process.exit(0)
 }
 
