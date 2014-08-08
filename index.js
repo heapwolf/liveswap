@@ -49,17 +49,24 @@ module.exports = function(opts) {
   writeHEAD(opts.target)
 
   function sig(cmd, value) {
+    if (cmd !== 'upgrade') return broadcast()
 
-    var keys = Object.keys(cluster.workers)
+    var mpath = path.resolve(value)
+    fs.stat(mpath, function(err, stat) {
+      if (err) return reply(cmd, err)
+      writeHEAD(mpath)
+      broadcast()
+    })
 
-    function broadcast(keys) {
+    function broadcast() {
+      var keys = Object.keys(cluster.workers)
       keys.forEach(function(id, index) {
         var worker = cluster.workers[id]
         if (cmd === 'message') {
           worker.send(value)
         }
         else if (cmd === 'upgrade' && opts['zero-downtime']) {
-          if (index % 2 === 0 && index !== keys.length-1) { 
+          if (index % 2 === 0 && index !== keys.length - 1) {
             cluster.fork()
             setImmediate(function() {
               worker.disconnect()
@@ -78,29 +85,16 @@ module.exports = function(opts) {
         }
         else if (cmd === 'die') {
           worker.kill()
-          if (index === keys.length-1) {
+          if (index === keys.length - 1) {
             reply(cmd)
             process.kill()
           }
         }
-        if (index === keys.length-1) {
+        if (index === keys.length - 1) {
           reply(cmd)
         }
       })
     }
-
-    if (cmd === 'upgrade') {
-      var mpath = path.resolve(value)
-      return fs.stat(mpath, function(err, stat) {
-        if (!err) {
-          writeHEAD(mpath)
-          return broadcast(keys)
-        }
-        reply(cmd, err)
-      })
-    }
-
-    broadcast(keys)
   }
 
   //
