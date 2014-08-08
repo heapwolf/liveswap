@@ -44,13 +44,7 @@ module.exports = function(opts) {
 
   writeHEAD(opts.target)
 
-  function sig(cmd, value, norespawn) {
-    
-    if (norespawn) {
-      setTimeout(function() {
-        process.kill()
-      }, 1e3)
-    }
+  function sig(cmd, value) {
 
     var keys = Object.keys(cluster.workers)
 
@@ -75,16 +69,15 @@ module.exports = function(opts) {
             })
           }
         }
-        else {
-
+        else if (cmd === 'die') {
           cluster.workers[id].kill()
-
-          if (norespawn) {
-            if (index === keys.length-1) {
-              ee.emit('log', { value: 'OK', cmd: 'die' })
-            }
-            return
+          if (index === keys.length-1) {
+            ee.emit('log', { value: 'OK', cmd: 'die' })
+            process.kill()
           }
+        }
+        else {
+          cluster.workers[id].kill()
           cluster.fork()
         }
 
@@ -151,7 +144,7 @@ module.exports = function(opts) {
           break
 
           case 'die':
-            sig('die', null, true)
+            sig('die')
           break
 
           case 'kill':
