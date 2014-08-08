@@ -54,30 +54,30 @@ module.exports = function(opts) {
 
     function broadcast(keys) {
       keys.forEach(function(id, index) {
-
+        var worker = cluster.workers[id]
         if (cmd === 'message') {
-          cluster.workers[id].send(value)
+          worker.send(value)
         }
         else if (cmd === 'upgrade' && opts['zero-downtime']) {
           if (index % 2 === 0 && index !== keys.length-1) { 
             cluster.fork()
             setImmediate(function() {
-              cluster.workers[id].disconnect()
+              worker.disconnect()
             })
           }
           else {
-            cluster.workers[id].disconnect()
-            cluster.workers[id].on('disconnect', function() {
+            worker.disconnect()
+            worker.on('disconnect', function() {
               cluster.fork()
             })
           }
         }
         else if (cmd === 'upgrade') {
-          cluster.workers[id].kill()
+          worker.kill()
           cluster.fork()
         }
         else if (cmd === 'die') {
-          cluster.workers[id].kill()
+          worker.kill()
           if (index === keys.length-1) {
             reply(cmd)
             process.kill()
