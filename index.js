@@ -66,7 +66,7 @@ module.exports = function(opts) {
           worker.send(value)
         }
         else if (cmd === 'upgrade' && opts['zero-downtime']) {
-          if (index % 2 === 0 && index !== keys.length - 1) {
+          if (index % 2 === 0 && !isLast(index)) {
             cluster.fork()
             setImmediate(function() {
               worker.disconnect()
@@ -85,15 +85,15 @@ module.exports = function(opts) {
         }
         else if (cmd === 'die') {
           worker.kill()
-          if (index === keys.length - 1) {
+          if (isLast(index)) {
             reply(cmd)
             process.kill()
           }
         }
-        if (index === keys.length - 1) {
-          reply(cmd)
-        }
+        if (isLast(index)) { reply(cmd) }
       })
+
+      function isLast(i) { return i === keys.length - 1 }
     }
   }
 
