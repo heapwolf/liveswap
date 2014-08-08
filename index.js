@@ -60,6 +60,7 @@ module.exports = function(opts) {
 
     function broadcast() {
       var keys = Object.keys(cluster.workers)
+
       keys.forEach(function(id, index) {
         var worker = cluster.workers[id]
         if (cmd === 'message') {
@@ -90,8 +91,9 @@ module.exports = function(opts) {
             process.kill()
           }
         }
-        if (isLast(index)) { reply(cmd) }
       })
+
+      reply(cmd)
 
       function isLast(i) { return i === keys.length - 1 }
     }
