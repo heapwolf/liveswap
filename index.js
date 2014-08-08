@@ -69,16 +69,16 @@ module.exports = function(opts) {
             })
           }
         }
+        else if (cmd === 'upgrade') {
+          cluster.workers[id].kill()
+          cluster.fork()
+        }
         else if (cmd === 'die') {
           cluster.workers[id].kill()
           if (index === keys.length-1) {
             ee.emit('log', { value: 'OK', cmd: 'die' })
             process.kill()
           }
-        }
-        else {
-          cluster.workers[id].kill()
-          cluster.fork()
         }
 
         if (index === keys.length-1) {
