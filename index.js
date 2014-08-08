@@ -20,6 +20,10 @@ function writeHEAD(value) {
   return fs.writeFileSync(headpath, value)
 }
 
+function reply(cmd, value) {
+  ee.emit('reply', { cmd: cmd, value: value || 'OK' })
+}
+
 module.exports = function(opts) {
 
   if (typeof opts == 'string') {
@@ -55,7 +59,6 @@ module.exports = function(opts) {
           cluster.workers[id].send(value)
         }
         else if (cmd === 'upgrade' && opts['zero-downtime']) {
-
           if (index % 2 === 0 && index !== keys.length-1) { 
             cluster.fork()
             setImmediate(function() {
@@ -76,13 +79,12 @@ module.exports = function(opts) {
         else if (cmd === 'die') {
           cluster.workers[id].kill()
           if (index === keys.length-1) {
-            ee.emit('log', { value: 'OK', cmd: 'die' })
+            reply(cmd)
             process.kill()
           }
         }
-
         if (index === keys.length-1) {
-          ee.emit('log', { value: 'OK', cmd: cmd })
+          reply(cmd)
         }
       })
     }
@@ -94,7 +96,7 @@ module.exports = function(opts) {
           writeHEAD(mpath)
           return broadcast(keys)
         }
-        ee.emit('log', { value: err, cmd: cmd })
+        reply(cmd, err)
       })
     }
 
@@ -109,19 +111,13 @@ module.exports = function(opts) {
 
     var cmd
 
-    function log(d) {
+    function onReply(d) {
       conn.write(JSON.stringify(d) + '\n')
     }
 
-    ee.on('log', log)
-
-    conn.on('close', function() {
-      ee.removeListener('log', log)
-    })
-
-    conn.on('error', function(err) {
-      ee.emit('log', { value: err, cmd: cmd })
-    })
+    ee.on('reply', onReply)
+    conn.on('close', function() { ee.removeListener('reply', onReply) })
+    conn.on('error', function(err) { reply(cmd, err) })
 
     conn
       .pipe(split())
