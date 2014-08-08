@@ -79,7 +79,7 @@ module.exports = function(opts) {
             })
           }
         }
-        else if (cmd === 'upgrade') {
+        else if (cmd === 'upgrade' || cmd === 'kill') {
           worker.kill()
           cluster.fork()
         }
