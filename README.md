@@ -92,6 +92,7 @@ Options:
   -s, --start    <path> start a node process cluster.
   -H, --head     <path> path to HEAD file
   -z             disable zero-downtime, upgrade will kill processes
+  -v, --version  print program version and exit
 ```
 
 Pre-upgrade allows you to require a module that will be executed before each
