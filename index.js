@@ -48,6 +48,13 @@ module.exports = function(opts) {
 
   writeHEAD(opts.target)
 
+  cluster.on('exit', function(worker, code, signal) {
+    if (worker.suicide === true) return
+    console.error('a fork died, restarting! (%d/%d/%s)',
+                  worker.process.pid, code, signal)
+    cluster.fork()
+  })
+
   function sig(cmd, value) {
     if (cmd !== 'upgrade') return broadcast()
 
