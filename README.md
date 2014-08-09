@@ -1,7 +1,8 @@
-[![build-status](https://www.codeship.io/projects/27833a30-4c7c-0131-1043-328a0651e296/status)](https://www.codeship.io/projects/11257)
-
 # SYNOPSIS
 Safe code hotswap for zero downtime re-deploys.
+
+# BUILD STATUS
+[![Build Status](http://img.shields.io/travis/hij1nx/skipfile.svg?style=flat)](https://travis-ci.org/hij1nx/skipfile)
 
 # MOTIVATION
 An application in production should not need to be stopped in order to
