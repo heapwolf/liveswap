@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 var path = require('path')
 var client = require('../client')
+var numCPUs = require('os').cpus().length
 
 var args = require('optimist')
   .alias('p', 'port')
@@ -12,7 +13,7 @@ var args = require('optimist')
   .describe('a', '<address> specify the ip address to run on.')
 
   .alias('f', 'forks')
-  .default('f', 2)
+  .default('f', numCPUs)
   .describe('f', '<number> specify how many worker processes to spawn')
 
   .alias('u', 'upgrade')

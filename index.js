@@ -48,6 +48,13 @@ module.exports = function(opts) {
 
   writeHEAD(opts.target)
 
+  cluster.on('exit', function(worker, code, signal) {
+    if (worker.suicide === true) return
+    console.error('a fork died, restarting! (%d/%d/%s)',
+                  worker.process.pid, code, signal)
+    cluster.fork()
+  })
+
   function sig(cmd, value) {
     if (cmd !== 'upgrade') return broadcast()
 
@@ -59,26 +66,20 @@ module.exports = function(opts) {
     })
 
     function broadcast() {
-      var keys = Object.keys(cluster.workers)
-
-      keys.forEach(function(id, index) {
-        var worker = cluster.workers[id]
+      eachWorker(function(worker) {
         if (cmd === 'message') {
           worker.send(value)
         }
         else if (cmd === 'upgrade' && opts['zero-downtime']) {
-          if (index % 2 === 0 && !isLast(index)) {
-            cluster.fork()
-            setImmediate(function() {
-              worker.disconnect()
-            })
-          }
-          else {
-            worker.disconnect()
-            worker.on('disconnect', function() {
-              cluster.fork()
-            })
-          }
+          cluster.fork()
+          worker.disconnect()
+          var timeout = setTimeout(function() {
+            worker.kill()
+          }, 2000)
+          worker.on('disconnect', function() {
+            clearTimeout(timeout)
+            worker.kill()
+          })
         }
         else if (cmd === 'upgrade' || cmd === 'kill') {
           worker.kill()
@@ -86,17 +87,19 @@ module.exports = function(opts) {
         }
         else if (cmd === 'die') {
           worker.kill()
-          if (isLast(index)) {
-            reply(cmd)
-            process.kill()
-          }
         }
       })
 
       reply(cmd)
 
-      function isLast(i) { return i === keys.length - 1 }
+      if (cmd === 'die') process.kill()
     }
+  }
+
+  function eachWorker(cb) {
+    Object.keys(cluster.workers).forEach(function(id, index) {
+      cb(cluster.workers[id])
+    })
   }
 
   //
