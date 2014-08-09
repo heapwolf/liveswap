@@ -20,6 +20,10 @@ function writeHEAD(value) {
   return fs.writeFileSync(headpath, value)
 }
 
+function reply(cmd, value) {
+  ee.emit('reply', { cmd: cmd, value: value || 'OK' })
+}
+
 module.exports = function(opts) {
 
   if (typeof opts == 'string') {
@@ -44,68 +48,55 @@ module.exports = function(opts) {
 
   writeHEAD(opts.target)
 
-  function sig(cmd, value, norespawn) {
-    
-    if (norespawn) {
-      setTimeout(function() {
-        process.kill()
-      }, 1e3)
-    }
+  function sig(cmd, value) {
+    if (cmd !== 'upgrade') return broadcast()
 
-    var keys = Object.keys(cluster.workers)
+    var mpath = path.resolve(value)
+    fs.stat(mpath, function(err, stat) {
+      if (err) return reply(cmd, err)
+      writeHEAD(mpath)
+      broadcast()
+    })
 
-    function broadcast(keys) {
+    function broadcast() {
+      var keys = Object.keys(cluster.workers)
+
       keys.forEach(function(id, index) {
-
+        var worker = cluster.workers[id]
         if (cmd === 'message') {
-          cluster.workers[id].send(value)
+          worker.send(value)
         }
         else if (cmd === 'upgrade' && opts['zero-downtime']) {
-
-          if (index % 2 === 0 && index !== keys.length-1) { 
+          if (index % 2 === 0 && !isLast(index)) {
             cluster.fork()
             setImmediate(function() {
-              cluster.workers[id].disconnect()
+              worker.disconnect()
             })
           }
           else {
-            cluster.workers[id].disconnect()
-            cluster.workers[id].on('disconnect', function() {
+            worker.disconnect()
+            worker.on('disconnect', function() {
               cluster.fork()
             })
           }
         }
-        else {
-
-          cluster.workers[id].kill()
-
-          if (norespawn) {
-            if (index === keys.length-1) {
-              ee.emit('log', { value: 'OK', cmd: 'die' })
-            }
-            return
-          }
+        else if (cmd === 'upgrade' || cmd === 'kill') {
+          worker.kill()
           cluster.fork()
         }
-
-        if (index === keys.length-1) {
-          ee.emit('log', { value: 'OK', cmd: cmd })
+        else if (cmd === 'die') {
+          worker.kill()
+          if (isLast(index)) {
+            reply(cmd)
+            process.kill()
+          }
         }
       })
-    }
 
-    if (cmd === 'upgrade') {
-      var mpath = path.resolve(value)
-      return fs.stat(mpath, function(err, stat) {
-        if (!err) {
-          writeHEAD(mpath)
-          return broadcast(keys)
-        }
-        ee.emit('log', { value: err, cmd: cmd })
-      })
-    }
+      reply(cmd)
 
-    broadcast(keys)
+      function isLast(i) { return i === keys.length - 1 }
+    }
   }
 
   //
@@ -116,19 +107,13 @@ module.exports = function(opts) {
 
     var cmd
 
-    function log(d) {
+    function onReply(d) {
       conn.write(JSON.stringify(d) + '\n')
     }
 
-    ee.on('log', log)
-
-    conn.on('close', function() {
-      ee.removeListener('log', log)
-    })
-
-    conn.on('error', function(err) {
-      ee.emit('log', { value: err, cmd: cmd })
-    })
+    ee.on('reply', onReply)
+    conn.on('close', function() { ee.removeListener('reply', onReply) })
+    conn.on('error', function(err) { reply(cmd, err) })
 
     conn
       .pipe(split())
@@ -151,7 +136,7 @@ module.exports = function(opts) {
           break
 
           case 'die':
-            sig('die', null, true)
+            sig('die')
           break
 
           case 'kill':

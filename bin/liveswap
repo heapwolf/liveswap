@@ -37,10 +37,18 @@ var args = require('optimist')
 
   .describe('z', 'disable zero-downtime, upgrade will kill processes')
 
+  .alias('v', 'version')
+  .describe('v', 'print program version and exit')
+
 var argv = args.argv
 
 if (argv.h || argv.help || process.argv.length == 2) {
   console.log(args.help())
+  process.exit(0)
+}
+
+if (argv.v) {
+  console.log(require('../package.json').version)
   process.exit(0)
 }
 
