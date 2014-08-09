@@ -66,8 +66,7 @@ module.exports = function(opts) {
     })
 
     function broadcast() {
-      Object.keys(cluster.workers).forEach(function(id, index) {
-        var worker = cluster.workers[id]
+      eachWorker(function(worker) {
         if (cmd === 'message') {
           worker.send(value)
         }
@@ -95,6 +94,12 @@ module.exports = function(opts) {
 
       if (cmd === 'die') process.kill()
     }
+  }
+
+  function eachWorker(cb) {
+    Object.keys(cluster.workers).forEach(function(id, index) {
+      cb(cluster.workers[id])
+    })
   }
 
   //
