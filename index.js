@@ -81,16 +81,12 @@ module.exports = function(opts) {
         }
         else if (cmd === 'die') {
           worker.kill()
-          if (isLast(index)) {
-            reply(cmd)
-            process.kill()
-          }
         }
       })
 
       reply(cmd)
 
-      function isLast(i) { return i === keys.length - 1 }
+      if (cmd === 'die') process.kill()
     }
   }
 
