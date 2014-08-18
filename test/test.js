@@ -145,7 +145,6 @@ test('an app can be killed. all workers are killed and respawned', function (t) 
 
 test('an app can have its code swapped without restarting', function (t) {
 
-  var err = null
   var count = 0
   const FORKS = 7
   var message
@@ -180,7 +179,6 @@ test('an app can have its code swapped without restarting', function (t) {
       var lshandle1 = spawn('node', ['./bin/liveswap', '-u', APP2_PATH])
 
       lshandle1.stderr.on('data', function (data) {
-        err = data
         console.log('stderr (1): ' + data)
       })
 
@@ -217,11 +215,8 @@ test('an app can have its code swapped without restarting', function (t) {
 
 test('pre-upgrade logic is executed', function (t) {
 
-  var err = null
-  var count = 0
   const FORKS = 7
   const PRE = './test/fixtures/pre.js'
-  var message
 
   l('Spawning the application as a child process (0)')
   var cp_liveswap = spawn('node', ['./bin/liveswap', '--pre-upgrade', PRE, '-s', APP1_PATH, '-f', FORKS])
@@ -237,11 +232,10 @@ test('pre-upgrade logic is executed', function (t) {
   setTimeout(function() {
 
     var conn1
-    l('opening a connection to the application')
+    l('opening a connection to the application 1')
 
     conn1 = net.connect({ port: APP_PORT }, function() {
       conn1.on('data', function(d) {
-
         t.ok(d.toString() == '1')
         conn1.end()
         setTimeout(swap, 1500)
@@ -250,7 +244,7 @@ test('pre-upgrade logic is executed', function (t) {
 
     function reconnect() {
       var conn2
-      l('opening a connection to the application')
+      l('opening a connection to the application 2')
 
       conn2 = net.connect({ port: APP_PORT }, function() {
         conn2.on('data', function(d) {
@@ -276,7 +270,6 @@ test('pre-upgrade logic is executed', function (t) {
       var lshandle1 = spawn('node', ['./bin/liveswap', '-u', APP3_PATH])
 
       lshandle1.stderr.on('data', function (data) {
-        err = data
         console.log('stderr (1): ' + data)
       })
 
@@ -288,6 +281,28 @@ test('pre-upgrade logic is executed', function (t) {
         }
       })
     }
+
+  }, 1500)
+})
+
+test('failed pre-upgrade should error back to client', function (t) {
+
+  const PRE_ERROR = './test/fixtures/pre-error.js'
+
+  l('Spawning the application as a child process (0)')
+  var cp_liveswap = spawn('node', ['./bin/liveswap', '--pre-upgrade', PRE_ERROR, '-s', APP1_PATH])
+
+  setTimeout(function() {
+
+    l('sending upgrade (1)')
+    var lshandle1 = spawn('node', ['./bin/liveswap', '-u', APP3_PATH])
+
+    lshandle1.stdout.on('data', function (data) {
+      console.log('stdout (0): ' + data)
+      t.ok(data.toString().indexOf('Error: upgrade failed') !== -1)
+      cp_liveswap.kill()
+      t.end()
+    })
 
   }, 1500)
 })
