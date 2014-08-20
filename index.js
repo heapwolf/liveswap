@@ -80,12 +80,11 @@ module.exports = function(opts) {
           if (index % 2 === 0 && !isLast(index)) {
             cluster.fork()
             setImmediate(function() {
-              worker.disconnect()
+              disconnect(worker)
             })
           }
           else {
-            worker.disconnect()
-            worker.on('disconnect', function() {
+            disconnect(worker, function() {
               cluster.fork()
             })
           }
@@ -104,6 +103,18 @@ module.exports = function(opts) {
       })
 
       reply(cmd)
+
+      function disconnect(worker, cb) {
+        worker.disconnect()
+        var timeout = setTimeout(function() {
+          worker.kill()
+        }, 60000)
+        worker.on('disconnect', function() {
+          clearTimeout(timeout)
+          worker.kill()
+          cb && cb()
+        })
+      }
 
       function isLast(i) { return i === keys.length - 1 }
     }
