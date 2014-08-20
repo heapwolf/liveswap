@@ -116,7 +116,7 @@ function preupgrade(data, callback) {
     err = e.toString();
   }
 
-  return callback(err, value);
+  callback(err, value);
 }
 module.exports = preupgrade;
 ```
@@ -131,16 +131,25 @@ string is specified, it will be interpreted as the `target` option.
 
 ### [option] `{ port: <Number> }`
 
+### [option] `{ address: <String> }`
+
 ### [option] `{ forks: <Number> }`
 
-### [option] `{ "pre-ugrade": <String> }`
+### [option] `{ head: <String> }`
+
+### [option] `{ 'pre-upgrade': <String> }`
+
+### [option] `{ 'zero-downtime': <Boolean> }`
 
 ```js
 liveswap({
+  target: './index.js',
   port: 9008,
+  address: '0.0.0.0',
   forks: 2,
-  target: './index.js'
-  "pre-upgrade": './pull.js'
+  head: '/tmp/HEAD',
+  'pre-upgrade': './pull.js',
+  'zero-downtime': false
 })
 ```
 
