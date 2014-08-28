@@ -108,6 +108,7 @@ module.exports = function(opts) {
         worker.disconnect()
         var timeout = setTimeout(function() {
           worker.kill()
+          cb && cb()
         }, 60000)
         worker.on('disconnect', function() {
           clearTimeout(timeout)
