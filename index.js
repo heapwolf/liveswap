@@ -3,11 +3,12 @@ var http = require('http')
 var numCPUs = require('os').cpus().length
 var net = require('net')
 var EventEmitter = require('events').EventEmitter
-var split = require('split') 
+var split = require('split')
 var parse = require('through-parse')
 var through = require('through')
 var fs = require('fs')
 var path = require('path')
+var spawn = require('child_process').spawn
 
 var headpath = path.join(__dirname + '/HEAD')
 var ee = new EventEmitter
@@ -21,7 +22,7 @@ function writeHEAD(value) {
 }
 
 function reply(cmd, value) {
-  ee.emit('reply', { cmd: cmd, value: value || 'OK' })
+  ee.emit('reply', { cmd: cmd, value: value ? value.toString() : 'OK' })
 }
 
 module.exports = function(opts) {
@@ -122,7 +123,7 @@ module.exports = function(opts) {
   }
 
   //
-  // create a server to listen for out of process 
+  // create a server to listen for out of process
   // instructions to kill, disconnect or message workers.
   //
   var server = net.createServer(function(conn) {
@@ -148,9 +149,14 @@ module.exports = function(opts) {
         switch(cmd) {
           case 'upgrade':
             if (opts['pre-upgrade']) {
-              return require(opts['pre-upgrade'])(data, function(err, value) {
+              return preUpgrade(data.value, function(err) {
                 if (err) return reply(cmd, err)
-                sig('upgrade', value || data.value || opts.target)
+                if (typeof data.value == 'string' && data.value.length) {
+                  sig('upgrade', data.value)
+                }
+                else {
+                  sig('upgrade', opts.target)
+                }
               })
             }
             sig('upgrade', data.value)
@@ -172,6 +178,16 @@ module.exports = function(opts) {
         }
       }))
   })
+
+  function preUpgrade(value, cb) {
+    var args = Array.isArray(value) ? value : [ value ]
+    var child = spawn(opts['pre-upgrade'], args)
+    child.on('close', function(code) {
+      if (code === 0) return cb()
+      cb(new Error('pre upgrade script failed with error code: ' + code))
+    })
+    .on('error', function() {})
+  }
 
   server.listen(opts.port || 3000, opts.address, function() {
     console.log('Starting on port %d', opts.port)
