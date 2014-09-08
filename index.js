@@ -151,12 +151,7 @@ module.exports = function(opts) {
             if (opts['pre-upgrade']) {
               return preUpgrade(data.value, function(err) {
                 if (err) return reply(cmd, err)
-                if (typeof data.value == 'string' && data.value.length) {
-                  sig('upgrade', data.value)
-                }
-                else {
-                  sig('upgrade', opts.target)
-                }
+                sig('upgrade', isFile(data.value) ? data.value : opts.target)
               })
             }
             sig('upgrade', data.value)
@@ -178,6 +173,13 @@ module.exports = function(opts) {
         }
       }))
   })
+
+  function isFile(value) {
+    if (typeof value == 'string' && value.length) {
+      return fs.existsSync(path.resolve(value))
+    }
+    return false
+  }
 
   function preUpgrade(value, cb) {
     var args = Array.isArray(value) ? value : [ value ]
