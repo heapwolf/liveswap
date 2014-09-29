@@ -153,7 +153,7 @@ module.exports = function(opts) {
                 sig('upgrade', value || data.value || opts.target)
               })
             }
-            sig('upgrade', data.value)
+            sig('upgrade', data.value || opts.target)
           break
 
           case 'die':
