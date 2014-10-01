@@ -25,8 +25,8 @@ information read [`this`][0] blog post.
 # USAGE
 
 ## Install
-```bash
-npm install liveswap -g
+```
+$ npm install liveswap -g
 ```
 
 ## Example
@@ -45,8 +45,8 @@ console.log('Server running at http://127.0.0.1:1337/')
 ### Startup
 Start the application using liveswap from the command-line...
 
-```bash
-liveswap -s index1.js
+```
+$ liveswap -s index1.js
 ```
 Alternatively, start liveswap programmatically...
 
@@ -70,8 +70,8 @@ console.log('Server running at http://127.0.0.1:1337/')
 ### Live Update
 Update the current code by sending an update command to the server.
 
-```js
-liveswap -u ./index2.js
+```
+$ liveswap -u ./index2.js
 ```
 
 After sending an update message the worker processes will wait for
@@ -85,7 +85,7 @@ Options:
   -a, --address  <address> specify the ip address to run on.                   [default: "127.0.0.1"]
   -f, --forks    <number> specify how many worker processes to spawn           [default: 2]
   -u, --upgrade  [<path>] specify the source code to upgrade to.
-  --pre-upgrade  <path> a module to handle pre upgrade logic.
+  --pre-upgrade  <path> command to handle pre upgrade logic.
   -k, --kill     kill all forked worker processes and respawn.
   -d, --die      kill all forked worker processes and quit master process.
   -m, --message  <message> send a message to all the forked worker processes.
@@ -95,60 +95,58 @@ Options:
   -v, --version  print program version and exit
 ```
 
-Pre-upgrade allows you to require a module that will be executed before each
-time the upgrade happens.
+`--pre-upgrade` allows you to execute a command before any of the forks are restarted. For example updating a git repositorory, check out some branch etc.
 
-```bash
-liveswap --pre-upgrade ./pull.js --start ./index1.js
+```
+$ liveswap --pre-upgrade ./pull.sh --start ./index1.js
 ```
 
-The pre-upgrade module should export a single function as its interface.
-Here's an example of what that module might look like:
+The `--pre-upgrade` script has to execute successfully in order for the upgrade to succeed. A value used with the `-u` flag will be passed on to the command.
 
-```js
-function preupgrade(data, callback) {
-  console.log('executing pre-upgrade script...');
+Here's an example of what a script might look like:
 
-  var err, value = data.value;
-  try {
-    // execute pre-upgrade code
-  } catch (e) {
-    err = e.toString();
-  }
+```bash
+#!/usr/bin/bash
+set -e
+cd ~/myapp
+git fetch origin
+git reset --hard $1
+rm -rf node_modules
+npm install --production
+npm dedupe
+npm run bundle.js
+npm test
+```
 
-  callback(err, value);
-}
-module.exports = preupgrade;
+So to check out the `origin/master` branch you would issue the command:
+
+```
+$ liveswap -u origin/master
 ```
 
 # API
 
 ## liveswap(opts)
 The main export of this library accepts an options object or a string. If a
-string is specified, it will be interpreted as the `target` option.
+string is specified, it will be interpreted as the `target` option. The options
+object can have the following properties:
 
-### [option] `{ target: <String> }`
-
-### [option] `{ port: <Number> }`
-
-### [option] `{ address: <String> }`
-
-### [option] `{ forks: <Number> }`
-
-### [option] `{ head: <String> }`
-
-### [option] `{ 'pre-upgrade': <String> }`
-
-### [option] `{ 'zero-downtime': <Boolean> }`
+* `'target'` *(string)* Path to application that liveswap should run.
+* `'forks'` *(number, default: `2`)* Number of forks for the application.
+* `'port'` *(number, default: `3000`)* Listen to connections on this port.
+* `'address'` *(string, default: `'127.0.0.1'`)* Address to accept connections from. Set to `'0.0.0.0'` to accept connections from all ip addresses.
+* `'head'` *(string, default: `__dirname + '/HEAD'`)* Path to HEAD file.
+* `'pre-upgrade'` *(string)* Path to pre upgrade script.
+* `'zero-downtime'` *(boolean: default: `true`)* When set to `true`, disconnects forks instead of killing them and if a fork dies, it is automatically restarted.
 
 ```js
 liveswap({
   target: './index.js',
+  forks: 2,
   port: 9008,
   address: '0.0.0.0',
-  forks: 2,
   head: '/tmp/HEAD',
-  'pre-upgrade': './pull.js',
+  'pre-upgrade': './pull.sh',
   'zero-downtime': false
 })
 ```

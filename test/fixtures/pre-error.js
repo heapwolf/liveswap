@@ -1,5 +1,2 @@
-module.exports = function(target, done) {
-  setTimeout(function() {
-    done((new Error('upgrade failed')).toString())
-  }, 500)
-}
+#!/usr/bin/env node
+process.exit(1)
