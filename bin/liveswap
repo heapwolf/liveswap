@@ -68,7 +68,9 @@ var opts = {
 };
 
 if (argv.u) {
-  opts.value: path.resolve(argv.u);
+  if ( typeof argv.u == 'string' ) {
+    opts.value = path.resolve(argv.u);
+  };
   client.upgrade(opts, done)
 }
 else if (argv.k) {
@@ -78,7 +80,7 @@ else if (argv.d) {
   client.die(opts, done);
 }
 else if (argv.m) {
-  opts.value: argv.m;
+  opts.value = argv.m;
   client.message(opts, done)
 }
 else if (argv.s) {
