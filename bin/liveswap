@@ -62,17 +62,26 @@ var done = function(err, data) {
   process.exit(0)
 }
 
+var opts = {
+  host: argv.a,
+  port: argv.p
+};
+
 if (argv.u) {
-  client.upgrade(argv.u, done)
+  if ( typeof argv.u == 'string' ) {
+    opts.value = path.resolve(argv.u);
+  };
+  client.upgrade(opts, done)
 }
 else if (argv.k) {
-  client.kill(argv.k, done)
+  client.kill(opts, done)
 }
 else if (argv.d) {
-  client.die(null, done);
+  client.die(opts, done);
 }
 else if (argv.m) {
-  client.message(argv.m, done)
+  opts.value = argv.m;
+  client.message(opts, done)
 }
 else if (argv.s) {
 
